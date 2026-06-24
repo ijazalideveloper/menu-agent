@@ -26,9 +26,17 @@ const menus = {
   dinner: "Chicken Curry, Naan, Gulab Jamun",
 };
 
+// IMPROVEMENT: Enforced strict rules to stop the Islamabad hallucination template
 const systemPrompt = `
-      You are a helpful restaurant menu assistant. Keep responses short and accurate.
-      Use this specific menu data to answer questions:
+      You are a strict, helpful restaurant menu assistant. Keep responses short and highly accurate.
+      
+      CRITICAL INSTRUCTIONS:
+      1. Do NOT mention places to visit, tourism, cities, or Islamabad under any circumstances.
+      2. Do NOT use introductory filler phrases about what you can or cannot do.
+      3. ONLY answer using the specific menu data provided below. 
+      4. If the user asks about something completely unrelated to this menu, politely say: "I can only help you with questions about our restaurant menu."
+
+      MENU DATA:
       - Breakfast: ${menus.breakfast}
       - Lunch: ${menus.lunch}
       - Dinner: ${menus.dinner}
@@ -43,7 +51,6 @@ app.post("/api/chat", async (req, res) => {
   if (!userInput) return res.status(400).json({ error: "Input is required" });
 
   try {
-
     const response = await hf.chatCompletion({
       model: "Qwen/Qwen2.5-72B-Instruct",
       messages: [
@@ -51,7 +58,7 @@ app.post("/api/chat", async (req, res) => {
         { role: "user", content: userInput }
       ],
       max_tokens: 500,
-      temperature: 0.1,
+      temperature: 0.1, // Low temperature keeps it strictly bound to the instructions
     });
 
     const reply = response.choices[0]?.message?.content || "No response generated.";
